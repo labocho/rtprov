@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+require "rtprov"
+
+Rtprov::CLI.start(ARGV)
