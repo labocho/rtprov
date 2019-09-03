@@ -20,6 +20,14 @@ Or install it yourself as:
 
     $ gem install rtprov
 
+## Requirements
+
+rtprov requires following commands. Please install these.
+
+* ssh
+* lftp
+* colordiff
+
 ## Usage
 
 TODO: Write usage instructions here
