@@ -5,4 +5,5 @@ module Rtprov
 
   require_relative "rtprov/cli"
   require_relative "rtprov/session"
+  require_relative "rtprov/sftp"
 end

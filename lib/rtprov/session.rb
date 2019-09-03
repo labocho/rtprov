@@ -8,7 +8,7 @@ module Rtprov
 
     attr_reader :reader, :writer
 
-    def self.start(user, host, password, &block)
+    def self.start(host, user, password, &block)
       cmd = [
         "ssh",
         "#{user}@#{host}",

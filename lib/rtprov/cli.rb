@@ -3,12 +3,11 @@ require "yaml"
 
 module Rtprov
   class CLI < ::Thor
-    desc "fetch ROUTER", "Fetch config from router"
-    def fetch(router_name)
+    desc "fetch ROUTER [FILE]", "Fetch config from router"
+    def fetch(router_name, file = "/system/config")
       router = load_router(router_name)
-      Session.start(router["user"], router["host"], router["password"]) do |sh|
-        puts sh.exec("show config")
-      end
+      sftp = Sftp.new(router["host"], router["user"], router["password"])
+      puts sftp.get(file)
     end
 
     desc "ssh ROUTER", "exec ssh to router"
