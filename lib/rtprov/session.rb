@@ -23,6 +23,7 @@ module Rtprov
 
         session = new(r, w)
         session.exec("console lines infinity") # disable pager
+        session.exec("console columns 200")
 
         block.call(session)
 
