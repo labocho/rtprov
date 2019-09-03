@@ -15,7 +15,7 @@ module Rtprov
       Dir.mktmpdir do |dir|
         dest = File.join(dir, File.basename(src))
         run "get #{src} -o #{dest}"
-        File.read(File.basename(dest))
+        File.read(dest)
       end
     end
 
