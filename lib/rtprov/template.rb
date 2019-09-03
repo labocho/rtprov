@@ -2,6 +2,37 @@ require "erb"
 
 module Rtprov
   class Template
+    class RenderingContext
+      def initialize(local_vars)
+        local_vars.transform_values! {|v| hash_with_accessor(v) }
+        local_vars.each do |k, v|
+          binding.local_variable_set(k.to_sym, v)
+        end
+      end
+
+      def binding
+        @binding ||= super
+      end
+
+      private
+      # define key name method for hash recursively
+      def hash_with_accessor(obj)
+        case obj
+        when Array
+          obj.map {|e| hash_with_accessor(e) }
+        when Hash
+          obj.each_with_object({}) do |(k, v), h|
+            h[k] = hash_with_accessor(v)
+            h.singleton_class.define_method k do
+              fetch(k)
+            end
+          end
+        else
+          obj
+        end
+      end
+    end
+
     def self.find(router, name)
       candidates = [
         "templates/#{router}/#{name}.erb",
@@ -20,32 +51,8 @@ module Rtprov
     end
 
     def render(variables)
-      erb = @erb
-      variables.transform_values! {|v| hash_with_accessor(v) }
-
-      Object.new.instance_eval do
-        b = binding
-        variables.each do |k, v|
-          b.local_variable_set(k.to_sym, v)
-        end
-        erb.result(b)
-      end
-    end
-
-    def hash_with_accessor(obj)
-      case obj
-      when Array
-        obj.map {|e| hash_with_accessor(e) }
-      when Hash
-        obj.each_with_object({}) do |(k, v), h|
-          h[k] = hash_with_accessor(v)
-          h.singleton_class.define_method k do
-            fetch(k)
-          end
-        end
-      else
-        obj
-      end
+      context = RenderingContext.new(variables)
+      @erb.result(context.binding)
     end
   end
 end
