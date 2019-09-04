@@ -1,4 +1,5 @@
 require "reversible_cryptography"
+require "securerandom"
 
 module Rtprov
   class Encryption
@@ -18,7 +19,7 @@ module Rtprov
       new(key).decrypt(encrypted)
     end
 
-    def self.generate
+    def self.generate_key
       SecureRandom.base64(512)
     end
 

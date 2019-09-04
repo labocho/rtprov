@@ -3,6 +3,11 @@ require "yaml"
 
 module Rtprov
   class CLI < ::Thor
+    desc "new REPO", "Create new rtprov repository"
+    def new(name)
+      Initializer.run(name)
+    end
+
     desc "edit ROUTER", "Edit router config"
     def edit(router_name)
       Router.edit(router_name)
