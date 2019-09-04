@@ -34,12 +34,13 @@ module Rtprov
 
       sftp = Sftp.new(router.host, router.user, router.password)
       current_config = sftp.get(file)
+      diff = ENV["RTPROV_DIFF"] || %w(colordiff diff).find {|cmd| system("which", cmd, out: "/dev/null", err: "/dev/null") }
 
       Dir.mktmpdir do |dir|
         Dir.chdir(dir) do
           File.write("new.conf", new_config)
           File.write("current.conf", current_config)
-          system("colordiff", "-u", "current.conf", "new.conf", out: $stdout, err: $stderr)
+          system("#{diff} -u current.conf new.conf", out: $stdout, err: $stderr)
           warn "TODO: put, load config and confirm"
         end
       end
