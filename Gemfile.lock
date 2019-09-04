@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     rtprov (0.1.0)
+      reversible_cryptography
       thor
 
 GEM
@@ -14,6 +15,8 @@ GEM
       ast (~> 2.4.0)
     rainbow (3.0.0)
     rake (10.5.0)
+    reversible_cryptography (0.5.0)
+      thor
     rubocop (0.74.0)
       jaro_winkler (~> 1.5.1)
       parallel (~> 1.10)

@@ -30,6 +30,7 @@ module Rtprov
       unless s.success?
         raise "lftp command `#{command}` failed on sftp://#{host} by #{user}: #{e}"
       end
+
       o
     end
   end
