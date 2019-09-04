@@ -28,7 +28,7 @@ module Rtprov
       # use lftp (instead of sftp) to specify user and password by arguments
       o, e, s = Open3.capture3("lftp", "-u", "#{user},#{password}", "sftp://#{host}", stdin_data: command)
       unless s.success?
-        raise "SFTP command `#{command}` failed on #{host} by #{user}: #{e}"
+        raise "lftp command `#{command}` failed on sftp://#{host} by #{user}: #{e}"
       end
       o
     end
