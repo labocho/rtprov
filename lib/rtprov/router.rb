@@ -48,6 +48,10 @@ module Rtprov
       ENV["EDITOR"]
     end
 
+    def self.decrypt(name)
+      Encryption.decrypt(File.read("routers/#{name}.yml.enc"))
+    end
+
     def self.names
       Dir["routers/*.yml.enc"].map {|path|
         File.basename(path).gsub(/\.yml\.enc\z/, "")
@@ -55,7 +59,7 @@ module Rtprov
     end
 
     def self.load(name)
-      new(name, YAML.safe_load(Encryption.decrypt(File.read("routers/#{name}.yml.enc"))))
+      new(name, YAML.safe_load(decrypt(name)))
     end
 
     def initialize(name, attributes)

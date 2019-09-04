@@ -13,6 +13,11 @@ module Rtprov
       Router.edit(router_name)
     end
 
+    desc "show ROUTER", "Show router config"
+    def show(router_name)
+      puts Router.decrypt(router_name)
+    end
+
     desc "get ROUTER [FILE]", "Get config from router"
     def get(router_name, file = "/system/config")
       router = Router.load(router_name)
