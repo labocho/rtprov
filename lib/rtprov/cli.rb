@@ -3,6 +3,11 @@ require "yaml"
 
 module Rtprov
   class CLI < ::Thor
+    desc "edit ROUTER", "Edit router config"
+    def edit(router_name)
+      Router.edit(router_name)
+    end
+
     desc "get ROUTER [FILE]", "Get config from router"
     def get(router_name, file = "/system/config")
       router = Router.load(router_name)
@@ -32,8 +37,8 @@ module Rtprov
 
     desc "ls", "List routers"
     def ls
-      Dir["routers/*.yml"].each do |y|
-        puts File.basename(y).gsub(/\.yml\z/, "")
+      Router.names.each do |name|
+        puts name
       end
     end
 
@@ -42,16 +47,6 @@ module Rtprov
       router = Router.load(router_name)
       warn "Password: #{router.password}"
       exec "ssh", "#{router.user}@#{router.host}"
-    end
-
-    desc "encrypt [FILE]", "encrypt stdin or file"
-    def encrypt(file = nil)
-      puts Encryption.encrypt(file ? File.read(file) : $stdin.read)
-    end
-
-    desc "decrypt [FILE]", "decrypt stdin or file"
-    def decrypt(file = nil)
-      puts Encryption.decrypt(file ? File.read(file) : $stdin.read)
     end
   end
 end

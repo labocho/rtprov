@@ -18,10 +18,6 @@ module Rtprov
       new(key).decrypt(encrypted)
     end
 
-    def self.decrypt_recursive(encrypted, key = load_key)
-      new(key).decrypt_recursive(encrypted)
-    end
-
     def self.generate
       SecureRandom.base64(512)
     end
@@ -36,21 +32,6 @@ module Rtprov
 
     def decrypt(encrypted)
       ReversibleCryptography::Message.decrypt(encrypted, key)
-    end
-
-    def decrypt_recursive(obj)
-      case obj
-      when Array
-        obj.map {|e| decrypt_recursive(e) }
-      when Hash
-        return decrypt(obj.values.first) if obj.keys.map(&:to_s) == %w(_encrypted)
-
-        obj.each_with_object({}) do |(k, v), h|
-          h[k] = decrypt_recursive(v)
-        end
-      else
-        obj
-      end
     end
   end
 end

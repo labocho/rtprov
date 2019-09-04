@@ -1,16 +1,67 @@
+require "tmpdir"
+require "shellwords"
+
 module Rtprov
   class Router
     ATTRIBUTES = %w(host user password variables).map(&:freeze).freeze
 
     attr_reader :name, *ATTRIBUTES
 
+    def self.edit(name)
+      encrypted_file = "routers/#{name}.yml.enc"
+      decrypted = if File.exist?(encrypted_file)
+        Encryption.decrypt(File.read(encrypted_file))
+      else
+        <<~YAML
+          host: 127.0.0.1
+          user: admin
+          password: opensesame
+          variables: {}
+        YAML
+      end
+
+      Dir.mktmpdir do |dir|
+        temp = "#{dir}/#{name}.yml"
+        File.write(temp, decrypted)
+
+        if system("#{editor} #{temp.shellescape}", out: $stdout, err: $stderr)
+          encrypted = Encryption.encrypt(File.read(temp))
+          File.write(encrypted_file, encrypted)
+          warn "Saved to #{encrypted_file}"
+        else
+          warn "Not saved"
+        end
+      end
+    end
+
+    def self.editor
+      return ENV["RTPROV_EDITOR"] if ENV["RTPROV_EDITOR"]
+
+      # rubocop: disable Lint/HandleExceptions
+      begin
+        o, _e, s = Open3.capture3("git config core.editor")
+        return o.strip if s.success?
+      rescue Errno::ENOENT
+      end
+      # rubocop: enable Lint/HandleExceptions
+
+      ENV["EDITOR"]
+    end
+
+    def self.names
+      Dir["routers/*.yml.enc"].map {|path|
+        File.basename(path).gsub(/\.yml\.enc\z/, "")
+      }.sort
+    end
+
     def self.load(name)
-      new(name, YAML.load_file("routers/#{name}.yml"))
+      new(name, YAML.safe_load(Encryption.decrypt(File.read("routers/#{name}.yml.enc"))))
     end
 
     def initialize(name, attributes)
       @name = name
-      Encryption.decrypt_recursive(attributes).each do |k, v|
+
+      attributes.each do |k, v|
         ATTRIBUTES.include?(k) || raise("Unknown attribute found `#{k}`")
         instance_variable_set "@#{k}", v
       end
