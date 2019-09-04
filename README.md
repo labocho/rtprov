@@ -1,22 +1,8 @@
-# Rtprov
+# rtprov
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/rtprov`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+rtprov is Yamaha router (RTX or NVR series etc.) configuration tool.
 
 ## Installation
-
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'rtprov'
-```
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
 
     $ gem install rtprov
 
@@ -24,13 +10,14 @@ Or install it yourself as:
 
 rtprov requires following commands. Please install these.
 
-* ssh
+* colordiff (or diff)
 * lftp
-* colordiff
+* ssh
+* which
 
 ## Usage
 
-TODO: Write usage instructions here
+    $ rtprov new my_home
 
 ## Development
 
