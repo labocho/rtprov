@@ -4,7 +4,7 @@ require "shellwords"
 
 module Rtprov
   class Session
-    attr_reader :reader, :writer, :prompt, :prompt_pattern
+    attr_reader :router, :reader, :writer, :prompt, :prompt_pattern
 
     def self.start(router, &block)
       cmd = [
@@ -19,18 +19,19 @@ module Rtprov
         w.puts router.password
         prompt = r.expect(/^(.*>) /)[1]
 
-        session = new(r, w, prompt)
+        session = new(router, r, w, prompt)
         session.exec("console character en.ascii")
         session.exec("console lines infinity") # disable pager
         session.exec("console columns 200")
 
-        session.as_administrator(router.administrator_password, &block)
+        session.as_administrator(&block)
 
         w.puts "exit"
       end
     end
 
-    def initialize(reader, writer, prompt = ">")
+    def initialize(router, reader, writer, prompt = ">")
+      @router = router
       @reader = reader
       @writer = writer
       @prompt = prompt.dup.freeze
@@ -45,18 +46,36 @@ module Rtprov
         raise "Command `#{cmd}` timed out"
       end
 
-      out.each_line.to_a[1..-2].join # 最初の '> cmd' と最後の '> ' を削除
+      out.each_line.to_a[1..-2].join # remove first line like '> cmd' and last line line '> '
     end
 
-    def as_administrator(administrator_password, &block)
+    def exec_with_passwords(cmd)
+      writer.puts cmd
+
+      reader.expect(/^Login Password: /)
+      writer.puts router.anonymous_password
+
+      reader.expect(/^Administrator Password: /)
+      writer.puts router.administrator_password
+
+      out, * = reader.expect(prompt_pattern)
+
+      unless out
+        raise "Command `#{cmd}` timed out"
+      end
+
+      out.each_line.to_a[1..-2].join # remove first line like '> cmd' and last line line '> '
+    end
+
+    def as_administrator(&block)
       writer.puts "administrator"
       reader.expect(/Password: /)
-      writer.puts administrator_password
+      writer.puts router.administrator_password
       reader.expect(/^.*# /)
 
       begin
         # set new prompt because default administrator prompt "# " matches config file command etc.
-        session = self.class.new(reader, writer, "RTPROV#")
+        session = self.class.new(router, reader, writer, "RTPROV#")
         session.exec "console prompt RTPROV"
         block.call(session)
       ensure
