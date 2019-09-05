@@ -80,6 +80,20 @@ rtprov uses `ENV["RTPROV_DIFF"]` or `colordiff` or `diff` to print diff.
     # Rendering templates/my_config.erb and put to my_route as config1 and load it.
     $ rtprov put my_router --number 1 my_config
 
+Templates are ERB file. In template, define variables described in router file.
+For example, in router file,
+
+    variables:
+      foo:
+        bar:
+          - baz: foobar
+
+in template,
+
+    <%= foo.bar[0].baz >
+
+you can get "foobar".
+
 
 ## Development
 
