@@ -18,16 +18,19 @@ module Rtprov
       puts Router.decrypt(router_name)
     end
 
-    desc "get ROUTER [FILE]", "Get config from router"
-    def get(router_name, file = "/system/config0")
+    desc "get ROUTER", "Get config from router"
+    option :number, type: :numeric, default: 0, aliases: :n, desc: "Configuration number"
+    def get(router_name)
       router = Router.load(router_name)
       sftp = Sftp.new(router.host, router.user, router.administrator_password)
-      puts sftp.get(file)
+      puts sftp.get("/system/config#{options[:number]}")
     end
 
-    desc "put ROUTER TEMPLATE [FILE]", "Put config from router"
-    def put(router_name, template_name = "config0", config_number = 0)
-      current_file = "/system/config#{config_number}"
+    desc "put ROUTER TEMPLATE", "Put config from router"
+    option :number, type: :numeric, default: 0, aliases: :n, desc: "Configuration number"
+    option :force, type: :boolean, default: false, aliases: :f, desc: "Don't ask to trasfer and load config"
+    def put(router_name, template_name)
+      current_file = "/system/config#{options[:number]}"
       router = Router.load(router_name)
 
       template = Template.find(router_name, template_name)
@@ -43,19 +46,21 @@ module Rtprov
           File.write("current.conf", current_config.gsub(/^#.*$/, "").gsub(/(\r\n|\r|\n)+/, "\r\n"))
           system("#{diff} -u current.conf new.conf", out: $stdout, err: $stderr)
 
-          loop do
-            print "apply? (y/n): "
-            case $stdin.gets.strip
-            when "y"
-              break
-            when "n"
-              return nil
+          unless options[:force]
+            loop do
+              print "apply? (y/n): "
+              case $stdin.gets.strip
+              when "y"
+                break
+              when "n"
+                return nil
+              end
             end
           end
 
           sftp.put("new.conf", current_file)
           Session.start(router) do |s|
-            s.exec_with_passwords "load config #{config_number} silent no-key-generate"
+            s.exec_with_passwords "load config #{options[:number]} silent no-key-generate"
           end
         end
       end
