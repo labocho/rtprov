@@ -39,6 +39,7 @@ module Rtprov
         gitignore = <<~EOS
           /encryption_key
         EOS
+        File.write(".gitignore", gitignore)
 
         exec "git init"
         exec "git add ."
