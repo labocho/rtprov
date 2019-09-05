@@ -4,47 +4,70 @@ require "shellwords"
 
 module Rtprov
   class Session
-    PROMPT = /^> /.freeze
+    attr_reader :reader, :writer, :prompt, :prompt_pattern
 
-    attr_reader :reader, :writer
-
-    def self.start(host, user, password, &block)
+    def self.start(router, &block)
       cmd = [
         "ssh",
-        "#{user}@#{host}",
+        "#{router.user}@#{router.host}",
       ].shelljoin
 
       PTY.getpty(cmd) do |r, w, _pid|
         w.sync = true
 
         r.expect(/password/)
-        w.puts password
-        r.expect(/^> /)
+        w.puts router.password
+        prompt = r.expect(/^(.*>) /)[1]
 
-        session = new(r, w)
+        session = new(r, w, prompt)
+        session.exec("console character en.ascii")
         session.exec("console lines infinity") # disable pager
         session.exec("console columns 200")
 
-        block.call(session)
+        session.as_administrator(router.administrator_password, &block)
 
         w.puts "exit"
       end
     end
 
-    def initialize(reader, writer)
+    def initialize(reader, writer, prompt = ">")
       @reader = reader
       @writer = writer
+      @prompt = prompt.dup.freeze
+      @prompt_pattern = Regexp.compile("^" + Regexp.escape(prompt) + " ").freeze
     end
 
     def exec(cmd)
       writer.puts cmd
-      out, * = reader.expect(PROMPT)
+      out, * = reader.expect(prompt_pattern)
 
       unless out
         raise "Command `#{cmd}` timed out"
       end
 
       out.each_line.to_a[1..-2].join # 最初の '> cmd' と最後の '> ' を削除
+    end
+
+    def as_administrator(administrator_password, &block)
+      writer.puts "administrator"
+      reader.expect(/Password: /)
+      writer.puts administrator_password
+      reader.expect(/^.*# /)
+
+      begin
+        # set new prompt because default administrator prompt "# " matches config file command etc.
+        session = self.class.new(reader, writer, "RTPROV#")
+        session.exec "console prompt RTPROV"
+        block.call(session)
+      ensure
+        writer.puts "console prompt '#{prompt.gsub(/>$/, "")}'"
+        reader.expect(/^.*# /)
+      end
+
+      writer.puts "exit"
+      reader.expect "Save new configuration ? (Y/N)"
+      writer.puts "n"
+      reader.expect(prompt_pattern)
     end
   end
 end

@@ -3,7 +3,7 @@ require "shellwords"
 
 module Rtprov
   class Router
-    ATTRIBUTES = %w(host user password variables).map(&:freeze).freeze
+    ATTRIBUTES = %w(host user password administrator_password anonymous_password variables).map(&:freeze).freeze
 
     attr_reader :name, *ATTRIBUTES
 
@@ -16,6 +16,8 @@ module Rtprov
           host: 127.0.0.1
           user: admin
           password: opensesame
+          administrator_password: opensesame
+          anonymous_password: anonymous_password
           variables: {}
         YAML
       end
