@@ -58,6 +58,7 @@ module Rtprov
       reader.expect(/^Administrator Password: /)
       writer.puts router.administrator_password
 
+      writer.puts "console prompt '#{prompt.gsub(/\#$/, "")}'" # load config may change prompt
       out, * = reader.expect(prompt_pattern)
 
       unless out
@@ -74,7 +75,7 @@ module Rtprov
       reader.expect(/^.*# /)
 
       begin
-        # set new prompt because default administrator prompt "# " matches config file command etc.
+        # set new prompt because default administrator prompt "# " matches config file comment etc.
         session = self.class.new(router, reader, writer, "RTPROV#")
         session.exec "console prompt RTPROV"
         block.call(session)
@@ -85,7 +86,7 @@ module Rtprov
 
       writer.puts "exit"
       reader.expect "Save new configuration ? (Y/N)"
-      writer.puts "n"
+      writer.puts "Y"
       reader.expect(prompt_pattern)
     end
   end

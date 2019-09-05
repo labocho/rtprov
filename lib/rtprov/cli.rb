@@ -19,29 +19,44 @@ module Rtprov
     end
 
     desc "get ROUTER [FILE]", "Get config from router"
-    def get(router_name, file = "/system/config")
+    def get(router_name, file = "/system/config0")
       router = Router.load(router_name)
-      sftp = Sftp.new(router.host, router.user, router.password)
+      sftp = Sftp.new(router.host, router.user, router.administrator_password)
       puts sftp.get(file)
     end
 
     desc "put ROUTER TEMPLATE [FILE]", "Put config from router"
-    def put(router_name, template_name = "config", file = "/system/config")
+    def put(router_name, template_name = "config0", config_number = 0)
+      current_file = "/system/config#{config_number}"
       router = Router.load(router_name)
 
       template = Template.find(router_name, template_name)
       new_config = template.render(router.variables)
 
-      sftp = Sftp.new(router.host, router.user, router.password)
-      current_config = sftp.get(file)
+      sftp = Sftp.new(router.host, router.user, router.administrator_password)
+      current_config = sftp.get(current_file)
       diff = ENV["RTPROV_DIFF"] || %w(colordiff diff).find {|cmd| system("which", cmd, out: "/dev/null", err: "/dev/null") }
 
       Dir.mktmpdir do |dir|
         Dir.chdir(dir) do
-          File.write("new.conf", new_config)
-          File.write("current.conf", current_config)
+          File.write("new.conf", new_config.gsub(/^#.*$/, "").gsub(/(\r\n|\r|\n)+/, "\r\n"))
+          File.write("current.conf", current_config.gsub(/^#.*$/, "").gsub(/(\r\n|\r|\n)+/, "\r\n"))
           system("#{diff} -u current.conf new.conf", out: $stdout, err: $stderr)
-          warn "TODO: put, load config and confirm"
+
+          loop do
+            print "apply? (y/n): "
+            case $stdin.gets.strip
+            when "y"
+              break
+            when "n"
+              return nil
+            end
+          end
+
+          sftp.put("new.conf", current_file)
+          Session.start(router) do |s|
+            s.exec_with_passwords "load config #{config_number} silent no-key-generate"
+          end
         end
       end
     end
