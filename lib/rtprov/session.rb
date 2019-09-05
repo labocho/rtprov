@@ -4,7 +4,7 @@ require "shellwords"
 
 module Rtprov
   class Session
-    attr_reader :router, :reader, :writer, :prompt, :prompt_pattern
+    attr_reader :router, :reader, :writer, :prompt_prefix, :prompt_pattern
 
     def self.start(router, &block)
       cmd = [
@@ -17,9 +17,9 @@ module Rtprov
 
         r.expect(/password/)
         w.puts router.password
-        prompt = r.expect(/^(.*>) /)[1]
+        prompt_prefix = r.expect(/^(.*)> /)[1]
 
-        session = new(router, r, w, prompt)
+        session = new(router, r, w, prompt_prefix, ">")
         session.exec("console character en.ascii")
         session.exec("console lines infinity") # disable pager
         session.exec("console columns 200")
@@ -30,12 +30,12 @@ module Rtprov
       end
     end
 
-    def initialize(router, reader, writer, prompt = ">")
+    def initialize(router, reader, writer, prompt_prefix, prompt_suffix)
       @router = router
       @reader = reader
       @writer = writer
-      @prompt = prompt.dup.freeze
-      @prompt_pattern = Regexp.compile("^" + Regexp.escape(prompt) + " ").freeze
+      @prompt_prefix = prompt_prefix.dup.freeze
+      @prompt_pattern = Regexp.compile("^" + Regexp.escape(prompt_prefix) + "[a-z1-9]*" + prompt_suffix + " ").freeze
     end
 
     def exec(cmd)
@@ -58,7 +58,7 @@ module Rtprov
       reader.expect(/^Administrator Password: /)
       writer.puts router.administrator_password
 
-      writer.puts "console prompt '#{prompt.gsub(/\#$/, "")}'" # load config may change prompt
+      writer.puts "console prompt '#{prompt_prefix}'" # load config may change prompt prefix
       out, * = reader.expect(prompt_pattern)
 
       unless out
@@ -76,11 +76,11 @@ module Rtprov
 
       begin
         # set new prompt because default administrator prompt "# " matches config file comment etc.
-        session = self.class.new(router, reader, writer, "RTPROV#")
+        session = self.class.new(router, reader, writer, "RTPROV", "#")
         session.exec "console prompt RTPROV"
         block.call(session)
       ensure
-        writer.puts "console prompt '#{prompt.gsub(/>$/, "")}'"
+        writer.puts "console prompt '#{prompt_prefix}'"
         reader.expect(/^.*# /)
       end
 
