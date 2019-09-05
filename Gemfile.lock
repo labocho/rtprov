@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rtprov (0.1.0)
+    rtprov (0.1.1)
       reversible_cryptography
       thor
 
