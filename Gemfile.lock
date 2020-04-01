@@ -14,7 +14,7 @@ GEM
     parser (2.6.3.0)
       ast (~> 2.4.0)
     rainbow (3.0.0)
-    rake (10.5.0)
+    rake (13.0.1)
     reversible_cryptography (0.5.0)
       thor
     rubocop (0.74.0)
@@ -33,7 +33,7 @@ PLATFORMS
 
 DEPENDENCIES
   bundler (~> 2.0)
-  rake (~> 10.0)
+  rake (~> 13.0)
   rtprov!
   rubocop (~> 0.74.0)
 
