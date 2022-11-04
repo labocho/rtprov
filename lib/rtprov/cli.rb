@@ -26,6 +26,28 @@ module Rtprov
       puts sftp.get("/system/config#{options[:number]}")
     end
 
+    desc "diff ROUTER TEMPLATE", "Show config diff of current and new config"
+    option :number, type: :numeric, default: 0, aliases: :n, desc: "Configuration number"
+    def diff(router_name, template_name)
+      current_file = "/system/config#{options[:number]}"
+      router = Router.load(router_name)
+
+      template = Template.find(router_name, template_name)
+      new_config = template.render(router.variables)
+
+      sftp = Sftp.new(router.host, router.user, router.administrator_password)
+      current_config = sftp.get(current_file)
+      diff = ENV["RTPROV_DIFF"] || %w(colordiff diff).find {|cmd| system("which", cmd, out: "/dev/null", err: "/dev/null") }
+
+      Dir.mktmpdir do |dir|
+        Dir.chdir(dir) do
+          File.write("new.conf", new_config.gsub(/^#.*$/, "").gsub(/(\r\n|\r|\n)+/, "\r\n"))
+          File.write("current.conf", current_config.gsub(/^#.*$/, "").gsub(/(\r\n|\r|\n)+/, "\r\n"))
+          system("#{diff} -u current.conf new.conf", out: $stdout, err: $stderr)
+        end
+      end
+    end
+
     desc "put ROUTER TEMPLATE", "Put config from router"
     option :number, type: :numeric, default: 0, aliases: :n, desc: "Configuration number"
     option :force, type: :boolean, default: false, aliases: :f, desc: "Don't ask to trasfer and load config"
@@ -64,6 +86,16 @@ module Rtprov
           end
         end
       end
+    end
+
+    desc "print ROUTER TEMPLATE", "Print config"
+    option :number, type: :numeric, default: 0, aliases: :n, desc: "Configuration number"
+    def print(router_name, template_name)
+      router = Router.load(router_name)
+
+      template = Template.find(router_name, template_name)
+      new_config = template.render(router.variables)
+      puts new_config
     end
 
     desc "ls", "List routers"
