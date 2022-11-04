@@ -1,3 +1,7 @@
+# v0.1.2
+
+* add subcommands `print`, `diff`
+
 # v0.1.1
 
 * support prompt change like 'pp1>' by 'pp select 1'

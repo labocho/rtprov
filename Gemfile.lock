@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rtprov (0.1.1)
+    rtprov (0.1.2)
       reversible_cryptography
       thor
 
@@ -25,7 +25,7 @@ GEM
       ruby-progressbar (~> 1.7)
       unicode-display_width (>= 1.4.0, < 1.7)
     ruby-progressbar (1.10.1)
-    thor (0.20.3)
+    thor (1.2.1)
     unicode-display_width (1.6.0)
 
 PLATFORMS
