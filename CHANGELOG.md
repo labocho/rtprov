@@ -1,3 +1,7 @@
+# v0.1.3
+
+* use file name instead of config number on `get`, `diff`
+
 # v0.1.2
 
 * add subcommands `print`, `diff`
