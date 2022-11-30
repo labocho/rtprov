@@ -19,17 +19,17 @@ module Rtprov
     end
 
     desc "get ROUTER", "Get config from router"
-    option :number, type: :numeric, default: 0, aliases: :n, desc: "Configuration number"
+    option :filename, type: :string, default: "/system/config", aliases: :f, desc: "Configuration file"
     def get(router_name)
       router = Router.load(router_name)
       sftp = Sftp.new(router.host, router.user, router.administrator_password)
-      puts sftp.get("/system/config#{options[:number]}")
+      puts sftp.get(options[:filename])
     end
 
     desc "diff ROUTER TEMPLATE", "Show config diff of current and new config"
-    option :number, type: :numeric, default: 0, aliases: :n, desc: "Configuration number"
+    option :filename, type: :string, default: "/system/config", aliases: :f, desc: "Configuration file"
     def diff(router_name, template_name)
-      current_file = "/system/config#{options[:number]}"
+      current_file = options[:filename]
       router = Router.load(router_name)
 
       template = Template.find(router_name, template_name)
@@ -89,7 +89,6 @@ module Rtprov
     end
 
     desc "print ROUTER TEMPLATE", "Print config"
-    option :number, type: :numeric, default: 0, aliases: :n, desc: "Configuration number"
     def print(router_name, template_name)
       router = Router.load(router_name)
 
