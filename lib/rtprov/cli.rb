@@ -41,8 +41,8 @@ module Rtprov
 
       Dir.mktmpdir do |dir|
         Dir.chdir(dir) do
-          File.write("new.conf", new_config.gsub(/^#.*$/, "").gsub(/(\r\n|\r|\n)+/, "\r\n"))
-          File.write("current.conf", current_config.gsub(/^#.*$/, "").gsub(/(\r\n|\r|\n)+/, "\r\n"))
+          File.write("new.conf", new_config.gsub(/^\s*#.*$/, "").gsub(/(\r\n|\r|\n)+/, "\r\n").chomp)
+          File.write("current.conf", current_config.gsub(/^\s*#.*$/, "").gsub(/\s+$/, "").gsub(/(\r\n|\r|\n)+/, "\r\n").chomp)
           system("#{diff} -u current.conf new.conf", out: $stdout, err: $stderr)
         end
       end
